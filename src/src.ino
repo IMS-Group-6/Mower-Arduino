@@ -223,7 +223,7 @@ void setup() {
   encoders[1] = MeEncoderMotor(SLOT_2);
   encoders[0].begin();
   encoders[1].begin();
-
+  
   
   wdt_reset();
   encoders[0].runSpeed(0);
@@ -239,6 +239,15 @@ void setup() {
     ; // wait for serial port to connect via USB
   }
 }
+
+void ultraSonicSensor(void){
+  MeUltrasonicSensor ultraSensor(PORT_10);
+  int dist = ultraSensor.distanceCm();
+  Serial.print("Ultra sonic sensor:");
+  Serial.print(dist);
+  Serial.print('\n');
+}
+
 void Forward(void)
 {
   Encoder_1.setMotorPwm(-moveSpeed);
@@ -279,4 +288,6 @@ void loop() {
       TurnRight();
     }
   } 
+  ultraSonicSensor();
+  delay(500);
 }
