@@ -211,13 +211,14 @@ float RELAX_ANGLE = -1;                    //Natural balance angle,should be adj
   #define ENCODER_BOARD_CAR_POS_MOTION     0x05
 
 
-
 void setMotorPwm(int16_t pwm);
 
 void updateSpeed(void);
 
 void setup() {
   Serial.begin(115200);
+
+  gyro.begin();
   
   encoders[0] = MeEncoderMotor(SLOT_1);
   encoders[1] = MeEncoderMotor(SLOT_2);
@@ -248,6 +249,31 @@ void ultraSonicSensor(void){
   Serial.print('\n');
 }
 
+void lineFollowSensor(void){
+  MeLineFollower lineFollower(PORT_9);
+
+  int state = lineFollower.readSensors();
+  Serial.print("Line follow sensor: ");
+  Serial.print(state);
+  Serial.print('\n');
+}
+
+void gyroScopeRead(void){
+  gyro.update();
+  Serial.print("X: ");
+  Serial.print(gyro.getAngleX());
+  Serial.print(" ");
+
+  Serial.print("Y: ");
+  Serial.print(gyro.getAngleY());
+  Serial.print(" ");
+
+
+  Serial.print("Z: ");
+  Serial.print(gyro.getAngleZ());
+  Serial.print('\n');
+}
+
 void Forward(void)
 {
   Encoder_1.setMotorPwm(-moveSpeed);
@@ -275,9 +301,7 @@ void loop() {
   
   if (Serial.available() > 0) {
     String cmd = Serial.readStringUntil('\n');
-
-    Serial.print(cmd);
-    
+       
     if(cmd == "w"){
       Forward();
     } else if (cmd == "s"){
@@ -287,7 +311,10 @@ void loop() {
     } else if (cmd == "d"){
       TurnRight();
     }
-  } 
+  }
+
   ultraSonicSensor();
-  delay(500);
+  lineFollowSensor();
+  // gyroScopeRead();
+  delay(200);
 }
