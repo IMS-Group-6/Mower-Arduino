@@ -299,29 +299,15 @@ void StopMotor(void){
 
 void loop() {
 
-/*   led_ring.setColorAt(0, 0, 50, 0);
-  led_ring.show();
-
-  led_ring.setColorAt(3, 50, 0, 0);
-  led_ring.show(); */
-
-
-  if(dist() <= 15){
-    led_ring.setColor(0, 50, 0, 0);
-    led_ring.show();
+  if(dist()<=15){
     StopMotor();
     return;
-    } 
-  
+  } 
+
   if(lineFollower.readSensors()<=0){
     StopMotor();
     return;
   }
-  
-  /* Serial.print("Line follow sensor: ");
-  Serial.print(lineFollower.readSensors());
-  Serial.print('\n');
- */
 
   if (Serial.available() >0){
     String cmd = Serial.readStringUntil('\n');
@@ -331,7 +317,6 @@ void loop() {
   
     if(cmd == "w"){
       Forward();
-      //Serial.print("Gets here \n");
     } else if (cmd == "s"){
       Backward();
     } else if (cmd == "a"){
@@ -340,11 +325,6 @@ void loop() {
       TurnRight();
     }
    
-  //rgbCircle();
-  //ultraSonicSensor();
-  //gyroScopeRead(); 
   }
-  
-  //lineFollowSensor();
-  delay(1000);
+  delay(100);
 }
