@@ -7,10 +7,7 @@
 //#define DEBUG_INFO
 //#define DEBUG_INFO1
 
-Servo servos[12];  
-MeDCMotor dc;
-MeTemperature ts;
-MeRGBLed led;
+
 MeUltrasonicSensor *us = NULL;  //PORT_10
 Me7SegmentDisplay seg;
 MePort generalDevice;
@@ -98,6 +95,8 @@ int16_t LineFollowFlag=0;
 #define POWER_PORT                           A4
 #define BUZZER_PORT                          45
 #define RGBLED_PORT                          44
+#define RINGALLEDS                           0
+#define AURIGARINGLEDNUM                     12
 
 uint8_t command_index = 0;
 uint8_t auriga_mode = BLUETOOTH_MODE;
@@ -210,6 +209,9 @@ float RELAX_ANGLE = -1;                    //Natural balance angle,should be adj
   #define ENCODER_BOARD_SET_CUR_POS_ZERO   0x04
   #define ENCODER_BOARD_CAR_POS_MOTION     0x05
 
+MeLineFollower lineFollower (PORT_9);
+MeRGBLed led_ring(0,12);
+
 
 void setMotorPwm(int16_t pwm);
 
@@ -217,9 +219,10 @@ void updateSpeed(void);
 
 void setup() {
   Serial.begin(115200);
-
+  led_ring.setpin(RGBLED_PORT);
   gyro.begin();
   
+
   encoders[0] = MeEncoderMotor(SLOT_1);
   encoders[1] = MeEncoderMotor(SLOT_2);
   encoders[0].begin();
@@ -241,22 +244,15 @@ void setup() {
   }
 }
 
-void ultraSonicSensor(void){
-  MeUltrasonicSensor ultraSensor(PORT_10);
-  int dist = ultraSensor.distanceCm();
-  Serial.print("Ultra sonic sensor:");
-  Serial.print(dist);
-  Serial.print('\n');
+
+int16_t dist(){
+  MeUltrasonicSensor u_sensor(PORT_10);
+  int ret = u_sensor.distanceCm();
+  return ret;
 }
 
-void lineFollowSensor(void){
-  MeLineFollower lineFollower(PORT_9);
 
-  int state = lineFollower.readSensors();
-  Serial.print("Line follow sensor: ");
-  Serial.print(state);
-  Serial.print('\n');
-}
+
 
 void gyroScopeRead(void){
   gyro.update();
@@ -296,14 +292,46 @@ void TurnRight(void)
   Encoder_2.setMotorPwm(moveSpeed);
 }
 
+void StopMotor(void){
+  Encoder_1.setMotorPwm(0);
+  Encoder_2.setMotorPwm(0);
+}
+
 void loop() {
 
+/*   led_ring.setColorAt(0, 0, 50, 0);
+  led_ring.show();
+
+  led_ring.setColorAt(3, 50, 0, 0);
+  led_ring.show(); */
+
+
+  if(dist() <= 15){
+    led_ring.setColor(0, 50, 0, 0);
+    led_ring.show();
+    StopMotor();
+    return;
+    } 
   
-  if (Serial.available() > 0) {
+  if(lineFollower.readSensors()<=0){
+    StopMotor();
+    return;
+  }
+  
+  /* Serial.print("Line follow sensor: ");
+  Serial.print(lineFollower.readSensors());
+  Serial.print('\n');
+ */
+
+  if (Serial.available() >0){
     String cmd = Serial.readStringUntil('\n');
-       
+    Serial.print("Serial available");
+    Serial.print('\n');
+
+  
     if(cmd == "w"){
       Forward();
+      //Serial.print("Gets here \n");
     } else if (cmd == "s"){
       Backward();
     } else if (cmd == "a"){
@@ -311,10 +339,12 @@ void loop() {
     } else if (cmd == "d"){
       TurnRight();
     }
+   
+  //rgbCircle();
+  //ultraSonicSensor();
+  //gyroScopeRead(); 
   }
-
-  ultraSonicSensor();
-  lineFollowSensor();
-  // gyroScopeRead();
-  delay(200);
+  
+  //lineFollowSensor();
+  delay(1000);
 }
