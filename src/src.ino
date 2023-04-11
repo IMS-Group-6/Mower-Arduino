@@ -251,23 +251,21 @@ int16_t dist(){
   return ret;
 }
 
-
-
-
-void gyroScopeRead(void){
+double angleX(){
   gyro.update();
-  Serial.print("X: ");
-  Serial.print(gyro.getAngleX());
-  Serial.print(" ");
-
-  Serial.print("Y: ");
-  Serial.print(gyro.getAngleY());
-  Serial.print(" ");
+  return gyro.getAngleX();
+}
 
 
-  Serial.print("Z: ");
-  Serial.print(gyro.getAngleZ());
-  Serial.print('\n');
+double angleX(){
+  gyro.update();
+  return gyro.getAngleX();
+}
+
+
+double angleX(){
+  gyro.update();
+  return gyro.getAngleX();
 }
 
 void Forward(void)
@@ -299,6 +297,9 @@ void StopMotor(void){
 
 void loop() {
 
+  char cmd;
+
+
   if(dist()<=15){
     StopMotor();
     return;
@@ -310,21 +311,31 @@ void loop() {
   }
 
   if (Serial.available() >0){
-    String cmd = Serial.readStringUntil('\n');
+    cmd = Serial.read();
     Serial.print("Serial available");
     Serial.print('\n');
 
-  
-    if(cmd == "w"){
-      Forward();
-    } else if (cmd == "s"){
-      Backward();
-    } else if (cmd == "a"){
-      TurnLeft();
-    } else if (cmd == "d"){
-      TurnRight();
-    }
-   
+    switch(cmd){
+      case 'w':
+        Serial.write("W", 1);
+        Forward();
+        break;
+      case 's':
+        Serial.write("S", 1);
+        Backward();
+        break;
+      case 'a':
+        Serial.write("A", 1);
+        TurnLeft();
+        break;
+      case 'd':
+        Serial.write("D", 1);
+        TurnRight();
+        break;
+      default:
+        Serial.write("No commands", 12);
+        break;
+    }  
   }
   delay(100);
 }
