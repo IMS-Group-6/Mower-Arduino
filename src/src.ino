@@ -14,7 +14,7 @@ MePort generalDevice;
 MeLEDMatrix ledMx;
 MeInfraredReceiver *ir = NULL;  //PORT_8
 MeGyro gyro_ext(0,0x68);  //external gryo sensor
-MeGyro gyro(1,0x69);      //On Board external gryo sensor
+MeGyro gyro(1,0x69);      //On Board external gryo sensor // Uses
 MeCompass Compass;
 MeJoystick joystick;
 MeStepper steppers[4];
@@ -24,10 +24,10 @@ MeFlameSensor FlameSensor;
 MeGasSensor GasSensor;
 MeTouchSensor touchSensor;
 Me4Button buttonSensor;
-MeEncoderOnBoard Encoder_1(SLOT1);
-MeEncoderOnBoard Encoder_2(SLOT2);
+MeEncoderOnBoard Encoder_1(SLOT1); // Uses
+MeEncoderOnBoard Encoder_2(SLOT2); // Uses
 MeLineFollower line(PORT_9);
-MeEncoderMotor encoders[2];
+MeEncoderMotor encoders[2]; // Uses
 MePm25Sensor *pm25sensor = NULL;
 MeSmartServo *mysmartservo = NULL;
 
@@ -94,7 +94,7 @@ int16_t LineFollowFlag=0;
 
 #define POWER_PORT                           A4
 #define BUZZER_PORT                          45
-#define RGBLED_PORT                          44
+#define RGBLED_PORT                          44 //Uses
 #define RINGALLEDS                           0
 #define AURIGARINGLEDNUM                     12
 
@@ -257,13 +257,13 @@ double angleX(){
 }
 
 
-double angleX(){
+double angleY(){
   gyro.update();
   return gyro.getAngleX();
 }
 
 
-double angleX(){
+double angleZ(){
   gyro.update();
   return gyro.getAngleX();
 }
@@ -299,7 +299,6 @@ void loop() {
 
   char cmd;
 
-
   if(dist()<=15){
     StopMotor();
     return;
@@ -311,25 +310,20 @@ void loop() {
   }
 
   if (Serial.available() >0){
-    cmd = Serial.read();
-    Serial.print("Serial available");
-    Serial.print('\n');
-
+      cmd = Serial.read();
+      Serial.print("Serial available");
+    
     switch(cmd){
       case 'w':
-        Serial.write("W", 1);
         Forward();
         break;
       case 's':
-        Serial.write("S", 1);
         Backward();
         break;
       case 'a':
-        Serial.write("A", 1);
         TurnLeft();
         break;
       case 'd':
-        Serial.write("D", 1);
         TurnRight();
         break;
       default:
