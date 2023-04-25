@@ -16,16 +16,9 @@ MeEncoderOnBoard Encoder_2(SLOT2);
 MeEncoderMotor encoders[2];
 
 //  Variables - Integers
-int16_t moveSpeed   = 160;
-int16_t turnSpeed   = 160;
+int16_t moveSpeed   = 180;
+int16_t turnSpeed   = 180;
 int16_t minSpeed    = 45;
-
-// Variables - Double
-
-// RGB Matrix
-MeRGBLed led_ring(0,12);
-
-
 
 void setMotorPwm(int16_t pwm);
 
@@ -36,21 +29,15 @@ void setup() {
   gyroMeter.begin();
   
 
-  encoders[0], encoders[1] = MeEncoderMotor(SLOT1), MeEncoderMotor(SLOT2);
+  encoders[0] =  MeEncoderMotor(SLOT1); 
+  encoders[1] =  MeEncoderMotor(SLOT2);
+  
   encoders->begin();
+
 
   wdt_reset();
   encoders->runSpeed(0);
 
-  /* //Set Pwm 8KHz
-  TCCR1A = _BV(WGM10);
-  TCCR1B = _BV(CS11) | _BV(WGM12);
-
-  TCCR2A = _BV(WGM21) | _BV(WGM20);
-  TCCR2B = _BV(CS21);
-  while (!Serial) {
-    ; // wait for serial port to connect via USB
-  } */
 }
 
 void update(void){
@@ -84,6 +71,7 @@ void StopMotor(void){
   Encoder_2.setMotorPwm(0);
 }
 
+
 double getGyroX(){
   gyroMeter.update();
   return gyroMeter.getGyroX();
@@ -114,6 +102,15 @@ int16_t lineFlag(){
     return greyScale.readSensors();
 }
 
+void updateEncoderTick(){
+    volatile long leftTick = encoders[0].getCurrentPosition();
+    volatile long rightTick = encoders[1].getCurrentPosition();
+    Serial.print("Encoder 1 Pos: ");
+    Serial.println(leftTick);
+    Serial.print("Encoder 2 Pos: ");
+    Serial.println(rightTick);
+}
+
 void loop() {
 
   char cmd;
@@ -126,10 +123,10 @@ void loop() {
     return;
   } 
 
-  if(lineFlag()<=0){
-    StopMotor();
-    return;
-  }
+  // if(lineFlag()<=0){
+  //   StopMotor();
+  //   return;
+  // }
 
   if (Serial.available() >0){
       cmd = Serial.read();
@@ -159,6 +156,7 @@ void loop() {
         StopMotor();
         break;
       }
+      updateEncoderTick();
     }  
   }
   delay(50);
