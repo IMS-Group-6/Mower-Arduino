@@ -26,6 +26,7 @@ int16_t minSpeed    = 45;
 MeRGBLed led_ring(0,12);
 
 
+
 void setMotorPwm(int16_t pwm);
 
 void updateSpeed(void);
@@ -113,14 +114,15 @@ int16_t lineFlag(){
     return greyScale.readSensors();
 }
 
-
 void loop() {
 
   char cmd;
-
-
-  if(dist()<=15){
+  static bool waitForRaspberry = false;
+  
+  if(dist()<=15 && !waitForRaspberry){
     StopMotor();
+    Serial.println("CAPTURE");  
+    waitForRaspberry = true;
     return;
   } 
 
@@ -132,7 +134,13 @@ void loop() {
   if (Serial.available() >0){
       cmd = Serial.read();
       Serial.println("Serial available");
-    
+
+      if(waitForRaspberry && cmd == 'c'){
+        waitForRaspberry = false;
+      }
+      
+    if(!waitForRaspberry){
+
     switch(cmd){
       case 'w':
         Forward();
@@ -148,9 +156,9 @@ void loop() {
         break;
       default:
         Serial.write("Unknown command ");
-        Serial.println();
         StopMotor();
         break;
+      }
     }  
   }
   delay(50);
