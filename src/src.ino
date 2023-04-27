@@ -3,6 +3,7 @@
 #include "MeEEPROM.h"
 #include <Wire.h>
 #include <SoftwareSerial.h>
+#include <math.h>
 
 
 //  Sensor initiation
@@ -16,10 +17,24 @@ MeEncoderOnBoard Encoder_2(SLOT2);
 MeEncoderMotor encoders[2];
 
 //  Variables - Integers
+<<<<<<< Updated upstream
 int16_t moveSpeed   = 180;
 int16_t turnSpeed   = 180;
 int16_t minSpeed    = 45;
 
+=======
+int16_t moveSpeed   = 140;
+int16_t turnSpeed   = 140;
+int16_t minSpeed    = 45;
+
+// Distance traveled
+int travForward = 0;
+int travBackwards = 0;
+int travRight = 0;
+int travLeft = 0;
+
+
+>>>>>>> Stashed changes
 void setMotorPwm(int16_t pwm);
 
 void updateSpeed(void);
@@ -29,14 +44,29 @@ void setup() {
   gyroMeter.begin();
   
 
+<<<<<<< Updated upstream
   encoders[0] =  MeEncoderMotor(SLOT1); 
   encoders[1] =  MeEncoderMotor(SLOT2);
   
   encoders->begin();
+=======
+  encoders[0] = MeEncoderMotor(SLOT1);
+  encoders[1] = MeEncoderMotor(SLOT2);
+
+  encoders[0].begin();
+  encoders[1].begin();
+
+>>>>>>> Stashed changes
 
 
   wdt_reset();
-  encoders->runSpeed(0);
+  encoders[0].runSpeed(0);
+  encoders[1].runSpeed(1);
+
+  travForward = 0;
+  travBackwards = 0;
+  travRight = 0;
+  travLeft = 0;
 
 }
 
@@ -96,12 +126,13 @@ double getAngleZ() {
 }
 
 int16_t dist(){
-    return ultraSonic.distanceCm();
+  return ultraSonic.distanceCm();
 }
 int16_t lineFlag(){
-    return greyScale.readSensors();
+  return greyScale.readSensors();
 }
 
+<<<<<<< Updated upstream
 void updateEncoderTick(){
     volatile long leftTick = encoders[0].getCurrentPosition();
     volatile long rightTick = encoders[1].getCurrentPosition();
@@ -111,6 +142,37 @@ void updateEncoderTick(){
     Serial.println(rightTick);
 }
 
+=======
+
+void checkPwm(MeEncoderOnBoard &motor1, MeEncoderOnBoard &motor2){
+  
+  // Moving forward
+  if((motor1.getCurPwm() == -moveSpeed) && (motor2.getCurPwm() == moveSpeed)){
+      travForward++;
+      return;
+  }
+
+  // Moving backwards
+  if((motor1.getCurPwm() == moveSpeed) && (motor2.getCurPwm() == -moveSpeed)){
+      travBackwards++;
+      return;
+  }
+
+  // Moving right
+  if((motor1.getCurPwm() == -moveSpeed/2) && (motor2.getCurPwm() == moveSpeed)){
+      travRight++;
+      return;
+  }
+
+  // Moving left
+  if((motor1.getCurPwm() == -moveSpeed) && (motor2.getCurPwm() == moveSpeed/2)){
+      travLeft++;
+      return;
+  }
+}
+
+
+>>>>>>> Stashed changes
 void loop() {
 
   char cmd;
@@ -159,5 +221,10 @@ void loop() {
       updateEncoderTick();
     }  
   }
+  checkPwm(Encoder_1, Encoder_2);
+  Serial.println("travForward: " + String(travForward));
+  Serial.println("travBackwards: " + String(travBackwards));
+  Serial.println("travLeft: " + String(travLeft));
+  Serial.println("travRight: " + String(travRight));
   delay(50);
 }
