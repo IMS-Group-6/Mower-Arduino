@@ -3,7 +3,6 @@
 #include "MeEEPROM.h"
 #include <Wire.h>
 #include <SoftwareSerial.h>
-#include <math.h>
 
 
 //  Sensor initiation
@@ -17,12 +16,6 @@ MeEncoderOnBoard Encoder_2(SLOT2);
 MeEncoderMotor encoders[2];
 
 //  Variables - Integers
-<<<<<<< Updated upstream
-int16_t moveSpeed   = 180;
-int16_t turnSpeed   = 180;
-int16_t minSpeed    = 45;
-
-=======
 int16_t moveSpeed   = 140;
 int16_t turnSpeed   = 140;
 int16_t minSpeed    = 45;
@@ -34,7 +27,6 @@ int travRight = 0;
 int travLeft = 0;
 
 
->>>>>>> Stashed changes
 void setMotorPwm(int16_t pwm);
 
 void updateSpeed(void);
@@ -44,19 +36,11 @@ void setup() {
   gyroMeter.begin();
   
 
-<<<<<<< Updated upstream
-  encoders[0] =  MeEncoderMotor(SLOT1); 
-  encoders[1] =  MeEncoderMotor(SLOT2);
-  
-  encoders->begin();
-=======
   encoders[0] = MeEncoderMotor(SLOT1);
   encoders[1] = MeEncoderMotor(SLOT2);
 
   encoders[0].begin();
   encoders[1].begin();
-
->>>>>>> Stashed changes
 
 
   wdt_reset();
@@ -68,6 +52,15 @@ void setup() {
   travRight = 0;
   travLeft = 0;
 
+  /* //Set Pwm 8KHz
+  TCCR1A = _BV(WGM10);
+  TCCR1B = _BV(CS11) | _BV(WGM12);
+
+  TCCR2A = _BV(WGM21) | _BV(WGM20);
+  TCCR2B = _BV(CS21);
+  while (!Serial) {
+    ; // wait for serial port to connect via USB
+  } */
 }
 
 void update(void){
@@ -101,7 +94,6 @@ void StopMotor(void){
   Encoder_2.setMotorPwm(0);
 }
 
-
 double getGyroX(){
   gyroMeter.update();
   return gyroMeter.getGyroX();
@@ -132,17 +124,6 @@ int16_t lineFlag(){
   return greyScale.readSensors();
 }
 
-<<<<<<< Updated upstream
-void updateEncoderTick(){
-    volatile long leftTick = encoders[0].getCurrentPosition();
-    volatile long rightTick = encoders[1].getCurrentPosition();
-    Serial.print("Encoder 1 Pos: ");
-    Serial.println(leftTick);
-    Serial.print("Encoder 2 Pos: ");
-    Serial.println(rightTick);
-}
-
-=======
 
 void checkPwm(MeEncoderOnBoard &motor1, MeEncoderOnBoard &motor2){
   
@@ -172,7 +153,6 @@ void checkPwm(MeEncoderOnBoard &motor1, MeEncoderOnBoard &motor2){
 }
 
 
->>>>>>> Stashed changes
 void loop() {
 
   char cmd;
@@ -185,10 +165,10 @@ void loop() {
     return;
   } 
 
-  // if(lineFlag()<=0){
-  //   StopMotor();
-  //   return;
-  // }
+  if(lineFlag()<=0){
+    StopMotor();
+    return;
+  }
 
   if (Serial.available() >0){
       cmd = Serial.read();
@@ -218,13 +198,8 @@ void loop() {
         StopMotor();
         break;
       }
-      updateEncoderTick();
     }  
   }
   checkPwm(Encoder_1, Encoder_2);
-  Serial.println("travForward: " + String(travForward));
-  Serial.println("travBackwards: " + String(travBackwards));
-  Serial.println("travLeft: " + String(travLeft));
-  Serial.println("travRight: " + String(travRight));
   delay(50);
 }
