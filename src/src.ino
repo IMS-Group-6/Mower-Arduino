@@ -31,6 +31,24 @@ void setMotorPwm(int16_t pwm);
 
 void updateSpeed(void);
 
+// Setup inturrupts for encoders on both motors
+// Invert one of them as this so both values when positive means forward
+void interrupt_encoder1(void) {
+  if (digitalRead(Encoder_1.getPortB()) != 0) {
+    Encoder_1.pulsePosMinus();
+  } else {
+    Encoder_1.pulsePosPlus();
+  }
+}
+
+void interrupt_encoder2(void) {
+  if (digitalRead(Encoder_2.getPortB()) == 0) {
+    Encoder_2.pulsePosMinus();
+  } else {
+    Encoder_2.pulsePosPlus();
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   gyroMeter.begin();
@@ -42,6 +60,8 @@ void setup() {
   encoders[0].begin();
   encoders[1].begin();
 
+  attachInterrupt(Encoder_1.getIntNum(), interrupt_encoder1, RISING);
+  attachInterrupt(Encoder_2.getIntNum(), interrupt_encoder2, RISING);
 
   wdt_reset();
   encoders[0].runSpeed(0);
@@ -115,6 +135,18 @@ double getAngleY() {
 double getAngleZ() {
   gyroMeter.update();
   return gyroMeter.getAngleZ();
+}
+
+void reportOdometry() {
+  Encoder_1.updateCurPos();
+  Encoder_2.updateCurPos();
+
+  char charValA[20]; sprintf(charValA, ", %08d", Encoder_1.getCurPos());
+  char charValB[20]; sprintf(charValB, ", %08d", Encoder_2.getCurPos());
+  
+  Serial.print(millis());
+  Serial.print(charValA);
+  Serial.println(charValB);
 }
 
 int16_t dist(){
@@ -200,6 +232,9 @@ void loop() {
       }
     }  
   }
+
+  reportOdometry();
+
   checkPwm(Encoder_1, Encoder_2);
   delay(50);
 }
