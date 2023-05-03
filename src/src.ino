@@ -4,7 +4,6 @@
 #include <Wire.h>
 #include <SoftwareSerial.h>
 
-
 //  Sensor initiation
 MeUltrasonicSensor ultraSonic(PORT_10);
 MeLineFollower greyScale(PORT_9);
@@ -16,25 +15,30 @@ MeEncoderOnBoard Encoder_2(SLOT2);
 MeEncoderMotor encoders[2];
 
 //  Variables - Integers
-int16_t moveSpeed   = 160;
-int16_t turnSpeed   = 160;
-int16_t minSpeed    = 45;
+int16_t moveSpeed = 160;
+int16_t turnSpeed = 160;
+int16_t minSpeed = 45;
 
-// Variables - Double
+// Variables - Enum
+enum MowerState
+{
+  STOPPED,
+  STARTED,
+  MANUAL
+};
+MowerState mowerState = STOPPED;
 
 // RGB Matrix
-MeRGBLed led_ring(0,12);
-
-
+MeRGBLed led_ring(0, 12);
 
 void setMotorPwm(int16_t pwm);
 
 void updateSpeed(void);
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
   gyroMeter.begin();
-  
 
   encoders[0], encoders[1] = MeEncoderMotor(SLOT1), MeEncoderMotor(SLOT2);
   encoders->begin();
@@ -53,7 +57,8 @@ void setup() {
   } */
 }
 
-void update(void){
+void update(void)
+{
   gyroMeter.update();
 }
 
@@ -70,78 +75,93 @@ void Backward(void)
 void TurnLeft(void)
 {
   Encoder_1.setMotorPwm(-moveSpeed);
-  Encoder_2.setMotorPwm(moveSpeed/2);
+  Encoder_2.setMotorPwm(moveSpeed / 2);
 }
 
 void TurnRight(void)
 {
-  Encoder_1.setMotorPwm(-moveSpeed/2);
+  Encoder_1.setMotorPwm(-moveSpeed / 2);
   Encoder_2.setMotorPwm(moveSpeed);
 }
 
-void StopMotor(void){
+void StopMotor(void)
+{
   Encoder_1.setMotorPwm(0);
   Encoder_2.setMotorPwm(0);
 }
 
-double getGyroX(){
+double getGyroX()
+{
   gyroMeter.update();
   return gyroMeter.getGyroX();
 }
-double getAngleX(){
+double getAngleX()
+{
   gyroMeter.update();
   return gyroMeter.getAngleX();
 }
-double getGyroY() {
+double getGyroY()
+{
   gyroMeter.update();
   return gyroMeter.getGyroY();
 }
 
-double getAngleY() {
+double getAngleY()
+{
   gyroMeter.update();
   return gyroMeter.getAngleY();
 }
 
-double getAngleZ() {
+double getAngleZ()
+{
   gyroMeter.update();
   return gyroMeter.getAngleZ();
 }
 
-int16_t dist(){
-    return ultraSonic.distanceCm();
+int16_t dist()
+{
+  return ultraSonic.distanceCm();
 }
-int16_t lineFlag(){
-    return greyScale.readSensors();
+int16_t lineFlag()
+{
+  return greyScale.readSensors();
 }
 
-void loop() {
+void loop()
+{
 
   char cmd;
   static bool waitForRaspberry = false;
-  
-  if(dist()<=15 && !waitForRaspberry){
+
+  if (mowerState == STARTED && dist() <= 15 && !waitForRaspberry)
+  {
     StopMotor();
-    Serial.println("CAPTURE");  
+    Serial.println("CAPTURE");
     waitForRaspberry = true;
     return;
-  } 
+  }
 
-  if(lineFlag()<=0){
+  if (mowerState == STARTED && lineFlag() <= 0)
+  {
     StopMotor();
     return;
   }
 
-  if (Serial.available() >0){
-      cmd = Serial.read();
-      Serial.println("Serial available");
+  if (Serial.available() > 0)
+  {
+    cmd = Serial.read();
+    Serial.println("Serial available");
 
-      if(waitForRaspberry && cmd == 'c'){
-        waitForRaspberry = false;
-      }
-      
-    if(!waitForRaspberry){
+    if (waitForRaspberry && cmd == 'c')
+    {
+      waitForRaspberry = false;
+    }
 
-    switch(cmd){
+    if (!waitForRaspberry)
+    {
+
+      switch (cmd)
+      {
       case 'w':
         Forward();
         break;
@@ -154,12 +174,22 @@ void loop() {
       case 'd':
         TurnRight();
         break;
+      case 'm': // Added manual mode command
+        mowerState = MANUAL;
+        break;
+      case 'z': // Added start command
+        mowerState = STARTED;
+        break;
+      case 'x': // Added stop command
+        mowerState = STOPPED;
+        StopMotor();
+        break;
       default:
         Serial.write("Unknown command ");
         StopMotor();
         break;
       }
-    }  
+    }
   }
   delay(50);
 }
