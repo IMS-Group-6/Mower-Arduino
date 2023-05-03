@@ -6,7 +6,7 @@
 
 // Global States
 enum Mode {MANUAL_MODE, AUTONOMOUS_MODE};
-enum MowerState {IDLE, FORWARD, BACKWARD};
+enum MowerState {IDLE, FORWARD, BACKWARD, RIGHT, LEFT};
 
 // Sensor initiation
 MeUltrasonicSensor ultraSonic(PORT_10);
@@ -46,7 +46,6 @@ void interrupt_encoder2(void) {
   }
 }
 
-
 void setup() {
   Serial.begin(115200);
   gyroMeter.begin();
@@ -65,15 +64,6 @@ void setup() {
   encoders[0].runSpeed(0);
   encoders[1].runSpeed(1);
 
-  /* //Set Pwm 8KHz
-  TCCR1A = _BV(WGM10);
-  TCCR1B = _BV(CS11) | _BV(WGM12);
-
-  TCCR2A = _BV(WGM21) | _BV(WGM20);
-  TCCR2B = _BV(CS21);
-  while (!Serial) {
-    ; // wait for serial port to connect via USB
-  } */
 }
 
 void update(void){
@@ -93,12 +83,12 @@ void Backward(void)
 void TurnLeft(void)
 {
   Encoder_1.setMotorPwm(-moveSpeed);
-  Encoder_2.setMotorPwm(moveSpeed/2);
+  Encoder_2.setMotorPwm(-moveSpeed);
 }
 
 void TurnRight(void)
 {
-  Encoder_1.setMotorPwm(-moveSpeed/2);
+  Encoder_1.setMotorPwm(moveSpeed);
   Encoder_2.setMotorPwm(moveSpeed);
 }
 
@@ -150,12 +140,125 @@ int16_t lineFlag(){ return greyScale.readSensors();}
 Mode currentMode = MANUAL_MODE;
 MowerState mowerState = IDLE;
 
+unsigned long previousMillis = 0;
 
 void loop() {
 
   char cmd;
   static bool waitForRaspberry = false;
   
+
+  if (Serial.available()>0){
+      cmd = Serial.read();
+      Serial.println("Serial available");
+      switch (cmd)
+      {
+      case 'w':
+        if(currentMode==MANUAL_MODE){
+          Forward();
+        }
+        break;
+      case 's':
+        if(currentMode==MANUAL_MODE){
+          Backward();
+        }
+        break;
+      case 'd':
+        if(currentMode==MANUAL_MODE){
+          TurnRight();
+        }
+        break;
+      case 'a':
+        if(currentMode==MANUAL_MODE){
+          TurnLeft();
+        }
+        break;
+      case 'x':
+        if(currentMode==MANUAL_MODE){
+          StopMotor();
+        }
+        break;
+      case 'm':
+        currentMode = (currentMode == MANUAL_MODE) ? AUTONOMOUS_MODE : MANUAL_MODE;
+        mowerState = IDLE;
+        break;
+      default:
+        Serial.write("Unknown Command ");
+        StopMotor();
+        break;
+      }
+    }
+
+    if(currentMode == AUTONOMOUS_MODE){
+      if((mowerState == LEFT) && (millis() - previousMillis > 200)){
+       StopMotor();
+       Serial.println("Left is not clear");
+       Serial.println(previousMillis);
+       mowerState = RIGHT;
+       previousMillis = millis();
+    } else if((mowerState == RIGHT) && (millis() - previousMillis > 1000)){
+      StopMotor();
+      Serial.println("Right is not clear");
+      mowerState = BACKWARD;
+      previousMillis = millis();
+     }
+    switch(mowerState) {
+      case IDLE:
+        mowerState = FORWARD;
+        break;
+
+      case FORWARD:
+        Forward();
+        if(dist() <= 15) {
+          StopMotor();
+          Serial.println("CAPTURE");
+          delay(500);
+          mowerState = BACKWARD;
+        }
+        break;
+
+      case BACKWARD:
+        Backward();
+        if(dist() > 25){
+          StopMotor();
+          Serial.println("Obstacle has been avoided");
+          mowerState = LEFT;
+          previousMillis = millis();
+        }
+        break;
+
+      case LEFT:
+        Serial.println(previousMillis);
+        TurnLeft();
+        if(dist() > 200){
+          StopMotor();
+          mowerState = FORWARD;
+        }
+        previousMillis = millis();
+        break;
+
+      case RIGHT:
+        TurnRight();
+        if(dist() > 200){
+          StopMotor();
+          mowerState = FORWARD;
+        }
+        previousMillis = millis();
+        break;
+    }
+  } else {
+      if(currentMode == AUTONOMOUS_MODE){
+      StopMotor();
+      Serial.println("Gets here");
+      Serial.println(currentMode);
+      }
+    }
+  //reportOdometry();
+  delay(50);
+}
+
+  // Use for later
+
   // if(dist()<=15 && !waitForRaspberry){
   //   StopMotor();
   //   Serial.println("CAPTURE");  
@@ -167,81 +270,3 @@ void loop() {
   //   StopMotor();
   //   return;
   // }
-
-  if (Serial.available() >0){
-      cmd = Serial.read();
-      Serial.println("Serial available");
-      switch (cmd)
-      {
-      case 'w':
-        if(currentMode==MANUAL_MODE){
-          Forward();
-          Serial.println("Gets here 'W'");
-        }
-        break;
-      case 's':
-        if(currentMode==MANUAL_MODE){
-          Backward();
-          Serial.println("Gets here 'S'");
-        }
-        break;
-      case 'd':
-        if(currentMode==MANUAL_MODE){
-          TurnRight();
-          Serial.println("Gets here 'D'");
-        }
-        break;
-      case 'a':
-        if(currentMode==MANUAL_MODE){
-          TurnLeft();
-          Serial.println("Gets here 'A'" );
-        }
-        break;
-      case 'x':
-        if(currentMode==MANUAL_MODE){
-          StopMotor();
-          Serial.println("Gets here 'X'");
-        }
-        break;
-      case 'm':
-        currentMode = (currentMode == MANUAL_MODE) ? AUTONOMOUS_MODE : MANUAL_MODE;
-        mowerState = IDLE;
-        break;
-      default:
-        Serial.write("Unknown Command ");
-        StopMotor();
-        Serial.println("Gets here Stop motor");
-        break;
-      }
-    }
-
-      if(currentMode == AUTONOMOUS_MODE){
-        if(mowerState == IDLE){
-          mowerState = FORWARD;
-        }
-        if(mowerState==FORWARD){
-          Forward();
-          if(dist()<=15){
-            StopMotor();
-            Serial.println("CAPTURE");
-            mowerState = BACKWARD;
-            delay(2000);
-          }
-        } else if (mowerState == BACKWARD){
-          Backward();
-          if(dist()>15){
-            StopMotor();
-            delay(1000);
-            mowerState = FORWARD;
-          }
-        }
-      } else {
-        if(currentMode == AUTONOMOUS_MODE){
-        StopMotor();
-        Serial.println("Gets here");
-        Serial.println(currentMode);
-        }
-      }
-  //reportOdometry();
-  delay(50);
-}
