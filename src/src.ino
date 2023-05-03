@@ -190,18 +190,7 @@ void loop() {
     }
 
     if(currentMode == AUTONOMOUS_MODE){
-      if((mowerState == LEFT) && (millis() - previousMillis > 200)){
-       StopMotor();
-       Serial.println("Left is not clear");
-       Serial.println(previousMillis);
-       mowerState = RIGHT;
-       previousMillis = millis();
-    } else if((mowerState == RIGHT) && (millis() - previousMillis > 1000)){
-      StopMotor();
-      Serial.println("Right is not clear");
-      mowerState = BACKWARD;
-      previousMillis = millis();
-     }
+      
     switch(mowerState) {
       case IDLE:
         mowerState = FORWARD;
@@ -223,7 +212,6 @@ void loop() {
           StopMotor();
           Serial.println("Obstacle has been avoided");
           mowerState = LEFT;
-          previousMillis = millis();
         }
         break;
 
@@ -234,7 +222,6 @@ void loop() {
           StopMotor();
           mowerState = FORWARD;
         }
-        previousMillis = millis();
         break;
 
       case RIGHT:
@@ -243,7 +230,6 @@ void loop() {
           StopMotor();
           mowerState = FORWARD;
         }
-        previousMillis = millis();
         break;
     }
   } else {
