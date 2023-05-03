@@ -5,26 +5,20 @@
 #include <SoftwareSerial.h>
 
 
-//  Sensor initiation
+// Sensor initiation
 MeUltrasonicSensor ultraSonic(PORT_10);
 MeLineFollower greyScale(PORT_9);
 MeGyro gyroMeter(1, 0x69);
 
-//  Motor
+// Motor
 MeEncoderOnBoard Encoder_1(SLOT1);
 MeEncoderOnBoard Encoder_2(SLOT2);
 MeEncoderMotor encoders[2];
 
-//  Variables - Integers
+// Variables - Integers
 int16_t moveSpeed   = 140;
 int16_t turnSpeed   = 140;
 int16_t minSpeed    = 45;
-
-// Distance traveled
-int travForward = 0;
-int travBackwards = 0;
-int travRight = 0;
-int travLeft = 0;
 
 
 void setMotorPwm(int16_t pwm);
@@ -66,11 +60,6 @@ void setup() {
   wdt_reset();
   encoders[0].runSpeed(0);
   encoders[1].runSpeed(1);
-
-  travForward = 0;
-  travBackwards = 0;
-  travRight = 0;
-  travLeft = 0;
 
   /* //Set Pwm 8KHz
   TCCR1A = _BV(WGM10);
@@ -157,34 +146,6 @@ int16_t lineFlag(){
 }
 
 
-void checkPwm(MeEncoderOnBoard &motor1, MeEncoderOnBoard &motor2){
-  
-  // Moving forward
-  if((motor1.getCurPwm() == -moveSpeed) && (motor2.getCurPwm() == moveSpeed)){
-      travForward++;
-      return;
-  }
-
-  // Moving backwards
-  if((motor1.getCurPwm() == moveSpeed) && (motor2.getCurPwm() == -moveSpeed)){
-      travBackwards++;
-      return;
-  }
-
-  // Moving right
-  if((motor1.getCurPwm() == -moveSpeed/2) && (motor2.getCurPwm() == moveSpeed)){
-      travRight++;
-      return;
-  }
-
-  // Moving left
-  if((motor1.getCurPwm() == -moveSpeed) && (motor2.getCurPwm() == moveSpeed/2)){
-      travLeft++;
-      return;
-  }
-}
-
-
 void loop() {
 
   char cmd;
@@ -234,7 +195,5 @@ void loop() {
   }
 
   reportOdometry();
-
-  checkPwm(Encoder_1, Encoder_2);
   delay(50);
 }
