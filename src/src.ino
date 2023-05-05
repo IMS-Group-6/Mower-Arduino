@@ -6,7 +6,7 @@
 
 // Global States
 enum Mode {MANUAL_MODE, AUTONOMOUS_MODE};
-enum MowerState {IDLE, FORWARD, BACKWARD, RIGHT, LEFT};
+enum MowerState {IDLE, FORWARD, BACKWARD, RIGHT, LEFT, STOP};
 
 // Sensor initiation
 MeUltrasonicSensor ultraSonic(PORT_10);
@@ -46,7 +46,26 @@ void interrupt_encoder2(void) {
   }
 }
 
-void setup() {
+// Setup inturrupts for encoders on both motors
+// Invert one of them as this so both values when positive means forward
+void interrupt_encoder1(void) {
+  if (digitalRead(Encoder_1.getPortB()) != 0) {
+    Encoder_1.pulsePosMinus();
+  } else {
+    Encoder_1.pulsePosPlus();
+  }
+}
+
+void interrupt_encoder2(void) {
+  if (digitalRead(Encoder_2.getPortB()) == 0) {
+    Encoder_2.pulsePosMinus();
+  } else {
+    Encoder_2.pulsePosPlus();
+  }
+}
+
+void setup()
+{
   Serial.begin(115200);
   gyroMeter.begin();
   
@@ -66,7 +85,8 @@ void setup() {
 
 }
 
-void update(void){
+void update(void)
+{
   gyroMeter.update();
 }
 
@@ -92,30 +112,36 @@ void TurnRight(void)
   Encoder_2.setMotorPwm(moveSpeed);
 }
 
-void StopMotor(void){
+void StopMotor(void)
+{
   Encoder_1.setMotorPwm(0);
   Encoder_2.setMotorPwm(0);
 }
 
-double getGyroX(){
+double getGyroX()
+{
   gyroMeter.update();
   return gyroMeter.getGyroX();
 }
-double getAngleX(){
+double getAngleX()
+{
   gyroMeter.update();
   return gyroMeter.getAngleX();
 }
-double getGyroY() {
+double getGyroY()
+{
   gyroMeter.update();
   return gyroMeter.getGyroY();
 }
 
-double getAngleY() {
+double getAngleY()
+{
   gyroMeter.update();
   return gyroMeter.getAngleY();
 }
 
-double getAngleZ() {
+double getAngleZ()
+{
   gyroMeter.update();
   return gyroMeter.getAngleZ();
 }
@@ -142,7 +168,17 @@ MowerState mowerState = IDLE;
 
 unsigned long previousMillis = 0;
 
-void loop() {
+int16_t dist(){ return ultraSonic.distanceCm();}
+int16_t lineFlag(){ return greyScale.readSensors();}
+
+
+Mode currentMode = MANUAL_MODE;
+MowerState mowerState = IDLE;
+
+unsigned long previousMillis = 0;
+
+void loop()
+{
 
   char cmd;
   static bool waitForRaspberry = false;
