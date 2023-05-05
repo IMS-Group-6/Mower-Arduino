@@ -231,7 +231,6 @@ void loop()
       case IDLE:
         mowerState = FORWARD;
         break;
-
       case FORWARD:
         Forward();
         if(dist() <= 15) {
@@ -241,7 +240,6 @@ void loop()
           mowerState = BACKWARD;
         }
         break;
-
       case BACKWARD:
         Backward();
         if(dist() > 25){
@@ -250,7 +248,6 @@ void loop()
           mowerState = LEFT;
         }
         break;
-
       case LEFT:
         Serial.println(previousMillis);
         TurnLeft();
@@ -259,7 +256,6 @@ void loop()
           mowerState = FORWARD;
         }
         break;
-
       case RIGHT:
         TurnRight();
         if(dist() > 200){
