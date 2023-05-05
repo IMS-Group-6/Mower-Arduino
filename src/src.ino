@@ -48,18 +48,26 @@ void interrupt_encoder2(void) {
 
 // Setup inturrupts for encoders on both motors
 // Invert one of them as this so both values when positive means forward
-void interrupt_encoder1(void) {
-  if (digitalRead(Encoder_1.getPortB()) != 0) {
+void interrupt_encoder1(void)
+{
+  if (digitalRead(Encoder_1.getPortB()) != 0)
+  {
     Encoder_1.pulsePosMinus();
-  } else {
+  }
+  else
+  {
     Encoder_1.pulsePosPlus();
   }
 }
 
-void interrupt_encoder2(void) {
-  if (digitalRead(Encoder_2.getPortB()) == 0) {
+void interrupt_encoder2(void)
+{
+  if (digitalRead(Encoder_2.getPortB()) == 0)
+  {
     Encoder_2.pulsePosMinus();
-  } else {
+  }
+  else
+  {
     Encoder_2.pulsePosPlus();
   }
 }
@@ -151,9 +159,11 @@ void reportOdometry() {
   Encoder_1.updateCurPos();
   Encoder_2.updateCurPos();
 
-  char charValA[20]; sprintf(charValA, ", %08d", Encoder_1.getCurPos());
-  char charValB[20]; sprintf(charValB, ", %08d", Encoder_2.getCurPos());
-  
+  char charValA[20];
+  sprintf(charValA, ", %08d", Encoder_1.getCurPos());
+  char charValB[20];
+  sprintf(charValB, ", %08d", Encoder_2.getCurPos());
+
   Serial.print(millis());
   Serial.print(charValA);
   Serial.println(charValB);
