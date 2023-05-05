@@ -176,16 +176,6 @@ int16_t lineFlag(){ return greyScale.readSensors();}
 Mode currentMode = MANUAL_MODE;
 MowerState mowerState = IDLE;
 
-unsigned long previousMillis = 0;
-
-int16_t dist(){ return ultraSonic.distanceCm();}
-int16_t lineFlag(){ return greyScale.readSensors();}
-
-
-Mode currentMode = MANUAL_MODE;
-MowerState mowerState = IDLE;
-
-unsigned long previousMillis = 0;
 
 void loop()
 {
@@ -259,20 +249,13 @@ void loop()
         }
         break;
       case LEFT:
-        Serial.println(previousMillis);
         TurnLeft();
         if(dist() > 200){
           StopMotor();
           mowerState = FORWARD;
         }
         break;
-      case RIGHT:
-        TurnRight();
-        if(dist() > 200){
-          StopMotor();
-          mowerState = FORWARD;
-        }
-        break;
+
     }
   } else {
       if(currentMode == AUTONOMOUS_MODE){
