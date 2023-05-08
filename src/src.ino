@@ -242,16 +242,13 @@ void loop()
         }
         break;
       case OBSTACLE:
-        Serial.println("Backing away now: OBSTACLE");
         Backward();
         if(dist() > 15){
           StopMotor();
-          Serial.println("Obstacle has been avoided");
           mowerState = LEFT_OBSTACLE;
         }
         break;
       case BORDER:
-        Serial.println("Backing away now: BORDER");
         Backward();
         if(lineFlag() > 0){
           StopMotor();
@@ -259,14 +256,12 @@ void loop()
         }
         break;
       case LEFT_OBSTACLE:
-        Serial.println("Turning away now: OBSTACLE");
         TurnLeft();
         if(dist() > 30){
           StopMotor();
           mowerState = FORWARD;
         }
       case LEFT_BORDER:
-        Serial.println("Turning away now: BORDER");
         TurnLeft();
         delay(700);
         mowerState = FORWARD;
