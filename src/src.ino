@@ -6,7 +6,7 @@
 
 // Global States
 enum Mode {MANUAL_MODE, AUTONOMOUS_MODE};
-enum MowerState {IDLE, FORWARD, BACKWARD, RIGHT, LEFT, STOP};
+enum MowerState {IDLE, FORWARD, BACKWARD, RIGHT, LEFT, LEFT_OBSTACLE, LEFT_BORDER, STOP, OBSTACLE, BORDER};
 
 // Sensor initiation
 MeUltrasonicSensor ultraSonic(PORT_10);
@@ -27,24 +27,6 @@ int16_t minSpeed    = 45;
 void setMotorPwm(int16_t pwm);
 
 void updateSpeed(void);
-
-// Setup inturrupts for encoders on both motors
-// Invert one of them as this so both values when positive means forward
-void interrupt_encoder1(void) {
-  if (digitalRead(Encoder_1.getPortB()) != 0) {
-    Encoder_1.pulsePosMinus();
-  } else {
-    Encoder_1.pulsePosPlus();
-  }
-}
-
-void interrupt_encoder2(void) {
-  if (digitalRead(Encoder_2.getPortB()) == 0) {
-    Encoder_2.pulsePosMinus();
-  } else {
-    Encoder_2.pulsePosPlus();
-  }
-}
 
 // Setup inturrupts for encoders on both motors
 // Invert one of them as this so both values when positive means forward
@@ -183,6 +165,21 @@ void loop()
   char cmd;
   static bool waitForRaspberry = false;
   
+ 
+  // if(dist()<=8 && !waitForRaspberry){
+  //   //Serial.println("CAPTURE");
+  //   StopMotor();
+  //   mowerState = OBSTACLE;  
+  //   waitForRaspberry = true;
+  //   return;
+  // } 
+
+  // if(lineFlag()<=0){
+  //   StopMotor();
+  //   //Serial.println("Stop");
+  //   mowerState = BORDER;
+  //   return;
+  // }
 
   if (Serial.available()>0){
       cmd = Serial.read();
@@ -233,27 +230,46 @@ void loop()
         break;
       case FORWARD:
         Forward();
-        if(dist() <= 15) {
-          StopMotor();
+        if(dist()<= 8){
           Serial.println("CAPTURE");
-          delay(500);
-          mowerState = BACKWARD;
+          StopMotor();
+          mowerState = OBSTACLE;
+        }
+        if(lineFlag() <= 0){
+          StopMotor();
+          Serial.println("BORDER");
+          mowerState = BORDER;
         }
         break;
-      case BACKWARD:
+      case OBSTACLE:
+        Serial.println("Backing away now: OBSTACLE");
         Backward();
-        if(dist() > 25){
+        if(dist() > 15){
           StopMotor();
           Serial.println("Obstacle has been avoided");
-          mowerState = LEFT;
+          mowerState = LEFT_OBSTACLE;
         }
         break;
-      case LEFT:
+      case BORDER:
+        Serial.println("Backing away now: BORDER");
+        Backward();
+        if(lineFlag() > 0){
+          StopMotor();
+          mowerState = LEFT_BORDER;
+        }
+        break;
+      case LEFT_OBSTACLE:
+        Serial.println("Turning away now: OBSTACLE");
         TurnLeft();
-        if(dist() > 200){
+        if(dist() > 30){
           StopMotor();
           mowerState = FORWARD;
         }
+      case LEFT_BORDER:
+        Serial.println("Turning away now: BORDER");
+        TurnLeft();
+        delay(700);
+        mowerState = FORWARD;
         break;
 
     }
@@ -265,19 +281,4 @@ void loop()
       }
     }
   //reportOdometry();
-  delay(50);
 }
-
-  // Use for later
-
-  // if(dist()<=15 && !waitForRaspberry){
-  //   StopMotor();
-  //   Serial.println("CAPTURE");  
-  //   waitForRaspberry = true;
-  //   return;
-  // } 
-
-  // if(lineFlag()<=0){
-  //   StopMotor();
-  //   return;
-  // }
