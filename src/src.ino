@@ -6,7 +6,17 @@
 
 // Global States
 enum Mode {MANUAL_MODE, AUTONOMOUS_MODE};
-enum MowerState {IDLE, FORWARD, BACKWARD, RIGHT, LEFT, LEFT_OBSTACLE, LEFT_BORDER, STOP, OBSTACLE, BORDER};
+enum MowerState { IDLE, 
+                  FORWARD, 
+                  BACKWARD, 
+                  RIGHT, 
+                  LEFT, 
+                  OBSTACLE, 
+                  BORDER,
+                  STOP, 
+                  AVOID_OBSTACLE, 
+                  AVOID_BORDER 
+                  };
 
 // Sensor initiation
 MeUltrasonicSensor ultraSonic(PORT_10);
@@ -103,7 +113,8 @@ void StopMotor(void)
 }
 
 
-void reportOdometry() {
+void reportOdometry() 
+{
   Encoder_1.updateCurPos();
   Encoder_2.updateCurPos();
 
@@ -129,8 +140,6 @@ void loop()
 {
 
   char cmd;
-  static bool waitForRaspberry = false;
-  
 
   if (Serial.available()>0){
       cmd = Serial.read();
@@ -174,8 +183,7 @@ void loop()
     }
 
     if(currentMode == AUTONOMOUS_MODE){
-      
-    switch(mowerState) {
+      switch(mowerState) {
       case IDLE:
         mowerState = FORWARD;
         break;
@@ -196,23 +204,23 @@ void loop()
         Backward();
         if(distanceToObject() > 15){
           StopMotor();
-          mowerState = LEFT_OBSTACLE;
+          mowerState = AVOID_OBSTACLE;
         }
         break;
       case BORDER:
         Backward();
         if(borderDetector() > 0){
           StopMotor();
-          mowerState = LEFT_BORDER;
+          mowerState = AVOID_BORDER;
         }
         break;
-      case LEFT_OBSTACLE:
+      case AVOID_OBSTACLE:
         TurnLeft();
         if(distanceToObject() > 30){
           StopMotor();
           mowerState = FORWARD;
         }
-      case LEFT_BORDER:
+      case AVOID_BORDER:
         TurnLeft();
         delay(700);
         mowerState = FORWARD;
