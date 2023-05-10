@@ -11,7 +11,6 @@ enum MowerState {IDLE, FORWARD, BACKWARD, RIGHT, LEFT, LEFT_OBSTACLE, LEFT_BORDE
 // Sensor initiation
 MeUltrasonicSensor ultraSonic(PORT_10);
 MeLineFollower greyScale(PORT_9);
-MeGyro gyroMeter(1, 0x69);
 
 // Motor
 MeEncoderOnBoard Encoder_1(SLOT1);
@@ -57,7 +56,6 @@ void interrupt_encoder2(void)
 void setup()
 {
   Serial.begin(115200);
-  gyroMeter.begin();
   
 
   encoders[0] = MeEncoderMotor(SLOT1);
@@ -75,10 +73,6 @@ void setup()
 
 }
 
-void update(void)
-{
-  gyroMeter.update();
-}
 
 void Forward(void)
 {
@@ -108,34 +102,6 @@ void StopMotor(void)
   Encoder_2.setMotorPwm(0);
 }
 
-double getGyroX()
-{
-  gyroMeter.update();
-  return gyroMeter.getGyroX();
-}
-double getAngleX()
-{
-  gyroMeter.update();
-  return gyroMeter.getAngleX();
-}
-double getGyroY()
-{
-  gyroMeter.update();
-  return gyroMeter.getGyroY();
-}
-
-double getAngleY()
-{
-  gyroMeter.update();
-  return gyroMeter.getAngleY();
-}
-
-double getAngleZ()
-{
-  gyroMeter.update();
-  return gyroMeter.getAngleZ();
-}
-
 
 void reportOdometry() {
   Encoder_1.updateCurPos();
@@ -151,8 +117,8 @@ void reportOdometry() {
   Serial.println(charValB);
 }
 
-int16_t dist(){ return ultraSonic.distanceCm();}
-int16_t lineFlag(){ return greyScale.readSensors();}
+int16_t distanceToObject(){ return ultraSonic.distanceCm();}
+int16_t borderDetector(){ return greyScale.readSensors();}
 
 
 Mode currentMode = MANUAL_MODE;
@@ -165,21 +131,6 @@ void loop()
   char cmd;
   static bool waitForRaspberry = false;
   
- 
-  // if(dist()<=8 && !waitForRaspberry){
-  //   //Serial.println("CAPTURE");
-  //   StopMotor();
-  //   mowerState = OBSTACLE;  
-  //   waitForRaspberry = true;
-  //   return;
-  // } 
-
-  // if(lineFlag()<=0){
-  //   StopMotor();
-  //   //Serial.println("Stop");
-  //   mowerState = BORDER;
-  //   return;
-  // }
 
   if (Serial.available()>0){
       cmd = Serial.read();
@@ -230,12 +181,12 @@ void loop()
         break;
       case FORWARD:
         Forward();
-        if(dist()<= 8){
+        if(distanceToObject()<= 8){
           Serial.println("CAPTURE");
           StopMotor();
           mowerState = OBSTACLE;
         }
-        if(lineFlag() <= 0){
+        if(borderDetector() <= 0){
           StopMotor();
           Serial.println("BORDER");
           mowerState = BORDER;
@@ -243,21 +194,21 @@ void loop()
         break;
       case OBSTACLE:
         Backward();
-        if(dist() > 15){
+        if(distanceToObject() > 15){
           StopMotor();
           mowerState = LEFT_OBSTACLE;
         }
         break;
       case BORDER:
         Backward();
-        if(lineFlag() > 0){
+        if(borderDetector() > 0){
           StopMotor();
           mowerState = LEFT_BORDER;
         }
         break;
       case LEFT_OBSTACLE:
         TurnLeft();
-        if(dist() > 30){
+        if(distanceToObject() > 30){
           StopMotor();
           mowerState = FORWARD;
         }
