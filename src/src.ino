@@ -32,6 +32,9 @@ int16_t moveSpeed   = 110;
 int16_t turnSpeed   = 110;
 int16_t minSpeed    = 45;
 
+// LED Ring
+// MeRGBLed led_ring(0,12);
+
 
 void setMotorPwm(int16_t pwm);
 
@@ -81,6 +84,7 @@ void setup()
   encoders[0].runSpeed(0);
   encoders[1].runSpeed(1);
 
+  // led_ring.setpin(44);
 }
 
 
@@ -138,6 +142,9 @@ MowerState mowerState = IDLE;
 
 void loop()
 {
+
+  // led_ring.setColor(0,0,0,0);
+  // led_ring.show();
 
   char cmd;
 
@@ -227,12 +234,6 @@ void loop()
         break;
 
     }
-  } else {
-      if(currentMode == AUTONOMOUS_MODE){
-      StopMotor();
-      Serial.println("Gets here");
-      Serial.println(currentMode);
-      }
-    }
-  //reportOdometry();
+  } 
+  reportOdometry();
 }
