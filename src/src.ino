@@ -123,8 +123,9 @@ void reportOdometry()
   char charValB[20];
   sprintf(charValB, ", %08d", Encoder_2.getCurPos());
 
-  Serial.print(millis());
+  Serial.print("ENCODER, ");
   Serial.print(charValA);
+  Serial.print(",");
   Serial.println(charValB);
 }
 
@@ -189,7 +190,7 @@ void loop()
         break;
       case FORWARD:
         Forward();
-        if(distanceToObject()<= 8){
+        if(distanceToObject()<= 10){
           Serial.println("CAPTURE");
           StopMotor();
           mowerState = OBSTACLE;
@@ -202,7 +203,7 @@ void loop()
         break;
       case OBSTACLE:
         Backward();
-        if(distanceToObject() > 15){
+        if(distanceToObject() > 20){
           StopMotor();
           mowerState = AVOID_OBSTACLE;
         }
@@ -216,7 +217,7 @@ void loop()
         break;
       case AVOID_OBSTACLE:
         TurnLeft();
-        if(distanceToObject() > 30){
+        if(distanceToObject() > 25){
           StopMotor();
           mowerState = FORWARD;
         }
@@ -234,5 +235,5 @@ void loop()
       Serial.println(currentMode);
       }
     }
-  //reportOdometry();
+  reportOdometry();
 }
