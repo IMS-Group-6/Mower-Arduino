@@ -134,7 +134,7 @@ int16_t borderDetector(){ return greyScale.readSensors();}
 
 
 Mode currentMode = AUTONOMOUS_MODE;
-MowerState mowerState = STOP;
+MowerState mowerState = IDLE;
 
 
 void loop()
@@ -206,8 +206,10 @@ void loop()
 
       switch(mowerState) {
       case IDLE:
+        if(cmd == 'z'){
           Serial.println("Is in IDLE, Will change to FORWARD");
           mowerState = FORWARD;
+        }
         break;
       case FORWARD:
         Forward();
