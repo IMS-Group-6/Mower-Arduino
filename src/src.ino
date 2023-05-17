@@ -133,8 +133,8 @@ int16_t distanceToObject(){ return ultraSonic.distanceCm();}
 int16_t borderDetector(){ return greyScale.readSensors();}
 
 
-Mode currentMode = MANUAL_MODE;
-MowerState mowerState = IDLE;
+Mode currentMode = AUTONOMOUS_MODE;
+MowerState mowerState = STOP;
 
 
 void loop()
@@ -145,52 +145,73 @@ void loop()
   if (Serial.available()>0){
       cmd = Serial.read();
       Serial.println("Serial available");
-      switch (cmd)
-      {
-      case 'w':
-        if(currentMode==MANUAL_MODE){
-          Forward();
-        }
-        break;
-      case 's':
-        if(currentMode==MANUAL_MODE){
-          Backward();
-        }
-        break;
-      case 'd':
-        if(currentMode==MANUAL_MODE){
-          TurnRight();
-        }
-        break;
-      case 'a':
-        if(currentMode==MANUAL_MODE){
-          TurnLeft();
-        }
-        break;
-      case 'x':
-        if(currentMode==MANUAL_MODE){
-          StopMotor();
-        }
-        break;
-      case 'm':
-        currentMode = (currentMode == MANUAL_MODE) ? AUTONOMOUS_MODE : MANUAL_MODE;
-        mowerState = IDLE;
-        break;
-      default:
-        Serial.write("Unknown Command ");
+       // Handle these commands regardless of the mode.
+      if (cmd == 'x'){
+        mowerState = STOP;
+        currentMode = AUTONOMOUS_MODE;
         StopMotor();
-        break;
       }
-    }
+      else if (cmd == 'm'){
+        currentMode = MANUAL_MODE;
+        mowerState = IDLE;
+        StopMotor();
+      }
+      else if (cmd == 't'){
+        Serial.println("Switch to Autonomous mode");
+        currentMode = AUTONOMOUS_MODE;
+        mowerState = IDLE;
+        StopMotor();
+      }
 
+      // Handle these commands only in manual mode.
+      else if (currentMode==MANUAL_MODE){
+        switch (cmd)
+        {
+        case 'w':
+          Forward();
+          break;
+        case 's':
+          Backward();
+          break;
+        case 'd':
+          TurnRight();
+          break;
+        case 'a':
+          TurnLeft();
+          break;
+        default:
+          // Serial.write("Unknown Command ");
+          // StopMotor();
+          break;
+        }
+      }
+  }
+  
     if(currentMode == AUTONOMOUS_MODE){
+      if(cmd == 'x'){
+        mowerState = STOP;
+        StopMotor();
+        return;
+      }
+      if(cmd == 'm'){
+        currentMode = MANUAL_MODE;
+        mowerState = IDLE;
+        StopMotor();
+        return;
+      }
+      if(cmd == 'z'){
+        mowerState = IDLE;
+        return;
+      }
+
       switch(mowerState) {
       case IDLE:
-        mowerState = FORWARD;
+          Serial.println("Is in IDLE, Will change to FORWARD");
+          mowerState = FORWARD;
         break;
       case FORWARD:
         Forward();
-        if(distanceToObject()<= 10){
+        if(distanceToObject()<= 13){
           Serial.println("CAPTURE");
           StopMotor();
           mowerState = OBSTACLE;
@@ -226,14 +247,7 @@ void loop()
         delay(700);
         mowerState = FORWARD;
         break;
-
     }
-  } else {
-      if(currentMode == AUTONOMOUS_MODE){
-      StopMotor();
-      Serial.println("Gets here");
-      Serial.println(currentMode);
-      }
-    }
-  reportOdometry();
+  } 
+ //reportOdometry();
 }
