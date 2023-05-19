@@ -197,7 +197,6 @@ void loop()
         break;
         case IDLE:
         mowerState = FORWARD;
-        Serial.println("Enters Automode");
         break;
       case FORWARD:
         Forward();
@@ -240,5 +239,5 @@ void loop()
         break;
     }     
   } 
-  //reportOdometry();
+  reportOdometry();
 }
