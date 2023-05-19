@@ -15,8 +15,7 @@ enum MowerState { IDLE,
                   BORDER,
                   STOP, 
                   AVOID_OBSTACLE, 
-                  AVOID_BORDER 
-                  };
+                  AVOID_BORDER };
 
 // Sensor initiation
 MeUltrasonicSensor ultraSonic(PORT_10);
@@ -139,13 +138,17 @@ MowerState mowerState = IDLE;
 
 void loop()
 {
-
-  char cmd;
+  int cmd;
 
   if (Serial.available()>0){
       cmd = Serial.read();
-      Serial.println("Serial available");
-      switch (cmd)
+
+  if(cmd == 'x'){
+    StopMotor();
+    currentMode = MANUAL_MODE;
+  }
+
+   switch (cmd)
       {
       case 'w':
         if(currentMode==MANUAL_MODE){
@@ -168,25 +171,33 @@ void loop()
         }
         break;
       case 'x':
-        if(currentMode==MANUAL_MODE){
-          StopMotor();
-        }
+        StopMotor();        
+        break;
+      case 't':
+        currentMode = AUTONOMOUS_MODE;
+        mowerState = STOP;
         break;
       case 'm':
-        currentMode = (currentMode == MANUAL_MODE) ? AUTONOMOUS_MODE : MANUAL_MODE;
+        currentMode = MANUAL_MODE;
+        StopMotor();
+        break;
+      case 'z':
         mowerState = IDLE;
         break;
       default:
-        Serial.write("Unknown Command ");
-        StopMotor();
-        break;
+      Serial.println("ERROR: WRONG COMMAND");
+      break;
       }
     }
 
     if(currentMode == AUTONOMOUS_MODE){
       switch(mowerState) {
-      case IDLE:
+        case STOP:
+        if(cmd=='z'){ mowerState = IDLE; }
+        break;
+        case IDLE:
         mowerState = FORWARD;
+        Serial.println("Enters Automode");
         break;
       case FORWARD:
         Forward();
@@ -221,19 +232,13 @@ void loop()
           StopMotor();
           mowerState = FORWARD;
         }
+        break;
       case AVOID_BORDER:
         TurnLeft();
         delay(700);
         mowerState = FORWARD;
         break;
-
-    }
-  } else {
-      if(currentMode == AUTONOMOUS_MODE){
-      StopMotor();
-      Serial.println("Gets here");
-      Serial.println(currentMode);
-      }
-    }
-  reportOdometry();
+    }     
+  } 
+  //reportOdometry();
 }
